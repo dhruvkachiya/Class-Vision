@@ -226,7 +226,7 @@ export default function App() {
           <li><a href="#workflow">Workflow</a></li>
           <li><a href="#stack">Stack</a></li>
         </ul>
-        <button className="nav-cta">View on GitHub</button>
+        <button className="nav-cta" onClick={() => window.open('https://github.com/dhruvkachiya/Class-Vision', '_blank')}>View on GitHub</button>
       </nav>
 
       {/* HERO */}
@@ -282,10 +282,10 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.1 }}
         >
-          <button className="btn-primary">
-            Launch System →
+          <button className="btn-primary" onClick={() => window.open('https://github.com/dhruvkachiya/Class-Vision', '_blank')}>
+            View on GitHub →
           </button>
-          <button className="btn-secondary">
+          <button className="btn-secondary" onClick={() => window.open('https://github.com/dhruvkachiya/Class-Vision#readme', '_blank')}>
             View Documentation
           </button>
         </motion.div>
@@ -477,8 +477,8 @@ export default function App() {
             and run <code style={{ fontFamily: 'Space Mono', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: 6 }}>python attendance.py</code>.
           </p>
           <div className="cta-buttons">
-            <button className="btn-primary">Get the Code</button>
-            <button className="btn-secondary">Read the Docs</button>
+            <button className="btn-primary" onClick={() => window.open('https://github.com/dhruvkachiya/Class-Vision', '_blank')}>Get the Code</button>
+            <button className="btn-secondary" onClick={() => window.open('https://github.com/dhruvkachiya/Class-Vision#readme', '_blank')}>Read the Docs</button>
           </div>
         </Reveal>
       </div>
