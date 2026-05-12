@@ -24,24 +24,24 @@
 ### Screenshots
 
 ### Simple UI
-<img src='Project Snap/Attandance_Page.png'>
+<img src='Project%20Snap/Attandance_Page.png'>
 
 ### While taking Image
-![Student Registration](Project Snap/Student_Registration.png)
+![Student Registration](Project%20Snap/Student_Registration.png)
 
 ## While taking Attendance
-![Camera Configurations](Project Snap/Camera_Configurations.png)
+![Camera Configurations](Project%20Snap/Camera_Configurations.png)
 
 ## Attendance in tabular format 
-<img src='Project Snap/Reports_Page.png'>
+<img src='Project%20Snap/Reports_Page.png'>
  
  ### Manage Academic Structure
- <img src='Project Snap/Manage_Academic_Structure.png'>
+ <img src='Project%20Snap/Manage_Academic_Structure.png'>
  
  ### Excel Report Generation
- <img src='Project Snap/Excel_File_Generation.png'>
+ <img src='Project%20Snap/Excel_File_Generation.png'>
  
  ### Edit Student Details
- <img src='Project Snap/Edit_Student.png'>
+ <img src='Project%20Snap/Edit_Student.png'>
 
 ## Follow for more projects!
