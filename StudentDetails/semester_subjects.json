@@ -1,0 +1,164 @@
+{
+  "Information Technology": {
+    "1": [
+      "IT Fundamentals",
+      "Mathematics",
+      "English"
+    ],
+    "2": [
+      "Python",
+      "Database Management",
+      "Networking"
+    ],
+    "3": [
+      "Web Technologies",
+      "JavaScript",
+      "CSS"
+    ],
+    "4": [
+      "Software Engineering",
+      "Cloud",
+      "Mobile Apps"
+    ],
+    "5": [
+      "Big Data",
+      "UI/UX Design",
+      "API Development"
+    ],
+    "6": [
+      "DevOps",
+      "Cyber Security",
+      "Machine Learning"
+    ],
+    "7": [
+      "Internship",
+      "Project",
+      "Elective 1"
+    ],
+    "8": [
+      "Final Project",
+      "Research Paper"
+    ]
+  },
+  "BBA": {
+    "1": [
+      "Economics",
+      "BA",
+      "English"
+    ],
+    "2": [
+      "Business Management"
+    ],
+    "3": [],
+    "4": [],
+    "5": [],
+    "6": [],
+    "7": [],
+    "8": []
+  },
+  "Sports": {
+    "1": [
+      "Cricket",
+      "Football",
+      "Basketball"
+    ],
+    "2": [
+      "Vollyball",
+      "Hockey"
+    ],
+    "3": [
+      "Chess",
+      "Pool and Snookers"
+    ],
+    "4": [
+      "Swimming",
+      "Boxing"
+    ],
+    "5": [],
+    "6": [],
+    "7": [],
+    "8": []
+  },
+  "Computer Engineering": {
+    "1": [
+      "C Programming",
+      "Mathematics",
+      "English"
+    ],
+    "2": [
+      "Data Structures",
+      "Python"
+    ],
+    "3": [
+      "Web Development",
+      "HTML",
+      "CSS"
+    ],
+    "4": [
+      "JavaScript",
+      "Operating Systems",
+      "Networks"
+    ],
+    "5": [
+      "Machine Learning",
+      "Cloud Computing",
+      "Java"
+    ],
+    "6": [
+      "AI",
+      "Cyber Security",
+      "Data Science"
+    ],
+    "7": [
+      "Project",
+      "Internship",
+      "Research"
+    ],
+    "8": [
+      "Final Project",
+      "Elective",
+      "Seminar"
+    ]
+  },
+  "Electronics": {
+    "1": [
+      "Basic Electronics",
+      "Mathematics",
+      "Physics",
+      "EE"
+    ],
+    "2": [
+      "Digital Electronics",
+      "Circuit Theory",
+      "C Programming"
+    ],
+    "3": [
+      "Microprocessors",
+      "Signals & Systems"
+    ],
+    "4": [
+      "Control Systems",
+      "Embedded Systems"
+    ],
+    "5": [
+      "IoT",
+      "Communication Systems",
+      "Power Electronics"
+    ],
+    "6": [
+      "Robotics",
+      "Signal Processing",
+      "Wireless Networks"
+    ],
+    "7": [
+      "Project",
+      "Internship",
+      "Elective"
+    ],
+    "8": [
+      "Final Project",
+      "Research",
+      "Seminar"
+    ]
+  }
+}
