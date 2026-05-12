@@ -40,5 +40,8 @@
  
  ### Excel Report Generation
  <img src='Project Snap/Excel_File_Generation.png'>
+ 
+ ### Edit Student Details
+ <img src='Project Snap/Edit_Student.png'>
 
 ## Follow for more projects!
