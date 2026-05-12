@@ -1,5 +1,5 @@
 
-# Class-Vision - Face Based Attendance System
+# Class-Vision  Face Based Attendance System
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)                 
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/) 
@@ -24,15 +24,15 @@
 ### Screenshots
 
 ### Simple UI
-<img src='Project Snap/1.PNG'>
+<img src='Project Snap/1.png'>
 
 ### While taking Image
-![Taking Images](Project Snap/5.PNG)
+![Taking Images](Project Snap/5.png)
 
 ## While taking Attendance
-![Taking Attendance](Project Snap/Screenshot (91).png)
+![Taking Attendance](Project Snap/screenshot.png)
 
 ## Attendance in tabular format 
-<img src='Project Snap/7.PNG'>
+<img src='Project Snap/7.png'>
 
 ## Follow for more projects!
