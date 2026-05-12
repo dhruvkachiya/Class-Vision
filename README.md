@@ -26,10 +26,10 @@
 ### Simple UI
 <img src='Project%20Snap/Attandance_Page.png'>
 
-### While taking Image
+### Student Registration
 ![Student Registration](Project%20Snap/Student_Registration.png)
 
-## While taking Attendance
+## Camera Configurations
 ![Camera Configurations](Project%20Snap/Camera_Configurations.png)
 
 ## Attendance in tabular format 
