@@ -413,6 +413,7 @@ def build_admin_tab(parent):
 
     ef_labels = ["Enrollment", "Name", "Stream", "Semester"]
     ef_vars   = [StringVar() for _ in ef_labels]
+    selected_student_id = [None] # Track original ID for renaming/editing
 
     for i, (lbl_txt, var) in enumerate(zip(ef_labels, ef_vars)):
         tk.Label(edit_form, text=lbl_txt, bg=CARD, fg=TEXT, font=FONT_LABEL,
@@ -434,6 +435,7 @@ def build_admin_tab(parent):
         sel = tree.selection()
         if not sel: return
         vals = tree.item(sel[0], "values")
+        selected_student_id[0] = vals[0] # Remember original enrollment
         for var, val in zip(ef_vars, vals):
             var.set(val)
 
@@ -446,22 +448,50 @@ def build_admin_tab(parent):
     edit_btn_row.pack(padx=20, pady=(0, 16), anchor="w")
 
     def save_edit():
-        enroll = ef_vars[0].get().strip()
-        if not enroll:
-            notif2.config(text="⚠  Select a student first.", fg=DANGER); return
+        old_enroll = selected_student_id[0]
+        if not old_enroll:
+            notif2.config(text="⚠  Select a student from the table first.", fg=DANGER); return
+            
+        new_enroll = ef_vars[0].get().strip()
+        new_name   = ef_vars[1].get().strip()
+        
+        if not new_enroll or not new_name:
+            notif2.config(text="⚠  Enrollment & Name cannot be empty.", fg=DANGER); return
+            
         try:
-            # Read all columns as strings to avoid dtype mismatch
             df = pd.read_csv(STUDENT_DETAIL_PATH, dtype=str).fillna("")
-            idx = df.index[df["Enrollment"] == enroll].tolist()
+            idx = df.index[df["Enrollment"] == old_enroll].tolist()
+            
+            # Fallback if selected student ID was manually deleted from CSV
+            if not idx:
+                idx = df.index[df["Enrollment"] == new_enroll].tolist()
+
             if idx:
-                df.at[idx[0], "Name"]     = ef_vars[1].get().strip()
-                df.at[idx[0], "Stream"]   = ef_vars[2].get().strip()
-                df.at[idx[0], "Semester"] = ef_vars[3].get().strip()
+                # Get old name for folder renaming
+                orig_name = df.at[idx[0], "Name"]
+                
+                # Update CSV data
+                df.at[idx[0], "Enrollment"] = new_enroll
+                df.at[idx[0], "Name"]       = new_name
+                df.at[idx[0], "Stream"]     = ef_vars[2].get().strip()
+                df.at[idx[0], "Semester"]   = ef_vars[3].get().strip()
+                
+                # Rename TrainingImage folder if ID or Name changed
+                if old_enroll != new_enroll or orig_name != new_name:
+                    old_path = os.path.join(TRAIN_IMAGE_PATH, f"{old_enroll}_{orig_name}")
+                    new_path = os.path.join(TRAIN_IMAGE_PATH, f"{new_enroll}_{new_name}")
+                    if os.path.exists(old_path):
+                        try:
+                            os.rename(old_path, new_path)
+                        except Exception as e:
+                            print(f"[Rename Error] {e}")
+
+                df.to_csv(STUDENT_DETAIL_PATH, index=False)
+                notif2.config(text=f"✅  Updated {new_enroll} successfully.", fg=ACCENT2)
+                selected_student_id[0] = new_enroll # Update selection tracker
+                refresh_table()
             else:
-                notif2.config(text="⚠  Student not found in CSV.", fg=DANGER); return
-            df.to_csv(STUDENT_DETAIL_PATH, index=False)
-            notif2.config(text=f"✅  Updated {enroll} successfully.", fg=ACCENT2)
-            refresh_table()
+                notif2.config(text="⚠  Record not found in database.", fg=DANGER)
         except Exception as e:
             notif2.config(text=f"Error: {e}", fg=DANGER)
 
