@@ -29,14 +29,56 @@ def _open_camera():
     for src in srcs:
         cap = cv2.VideoCapture(src)
         if cap.isOpened():
-            ret, frame = cap.read()
-            if ret and frame is not None:
-                cap.set(cv2.CAP_PROP_FRAME_WIDTH,  640)
-                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+            # Set MJPEG codec
+            cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH,  640)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+            
+            # Wait for camera to stabilize
+            time.sleep(0.5)
+            
+            good_frames = 0
+            for _ in range(10):
+                ret, frame = cap.read()
+                if ret and frame is not None and not _is_corrupted(frame):
+                    good_frames += 1
+            
+            if good_frames >= 3:
                 print(f"[Camera] Connected: {src}")
                 return cap
         cap.release()
     return None
+
+
+def _is_corrupted(frame):
+    """Detect corrupted/green/striped frames from DroidCam."""
+    if frame is None: return True
+    
+    # 1. Check for green dominance (common DroidCam glitch)
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    green_mask = cv2.inRange(hsv, (35, 40, 40), (85, 255, 255))
+    green_ratio = cv2.countNonZero(green_mask) / (frame.shape[0] * frame.shape[1])
+    if green_ratio > 0.5: return True
+    
+    # 2. Check for horizontal stripes/noise
+    # We look at the variance of the average brightness of each row
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    row_averages = np.mean(gray, axis=1)
+    # If there's a huge jump between adjacent rows (noise/lines), it's corrupted
+    row_diffs = np.abs(np.diff(row_averages))
+    if np.max(row_diffs) > 80: # Sudden brightness jump in lines
+        return True
+        
+    return False
+
+
+def _window_closed(win_name):
+    """Check if OpenCV window was closed via X button."""
+    try:
+        return cv2.getWindowProperty(win_name, cv2.WND_PROP_VISIBLE) < 1
+    except Exception:
+        return True
 
 
 def _update_label(label, msg, color="#2563EB"):
@@ -77,41 +119,43 @@ def TakeImage(l1, l2, stream, semester,
                 df_check = df_check.astype(str)
 
                 # Multi-frame reliability check
+                WIN_NAME = "Register Student - Press Q to quit early"
                 check_count = 0
                 detections = {} # Track how many times each ID is seen
 
                 while check_count < 40: # Scan for 40 valid face frames
                     ret, img = cam.read()
-                    if not ret: break
+                    if not ret or img is None:
+                        continue
+                    # Skip corrupted frames
+                    if _is_corrupted(img):
+                        continue
                     gray  = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                     faces = detector.detectMultiScale(gray, 1.3, 5)
 
                     if len(faces) == 0:
                         cv2.rectangle(img, (0, 0), (640, 40), (0, 0, 255), -1)
-                        cv2.putText(img, "⚠️  FACE NOT DETECTED - PLEASE SHOW FACE", (10, 26), 
+                        cv2.putText(img, "FACE NOT DETECTED - PLEASE SHOW FACE", (10, 26), 
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
                     else:
                         for (x, y, w, h) in faces:
-                            # Draw rectangle during scan
                             cv2.rectangle(img, (x, y), (x+w, y+h), (37, 99, 235), 2)
-                            
-                            # Normalize face for reliable duplicate check
                             face_roi = gray[y:y+h, x:x+w]
                             face_roi = cv2.resize(face_roi, (200, 200))
                             face_roi = cv2.equalizeHist(face_roi)
 
                             Id, conf = recognizer.predict(face_roi)
-                            # Relaxed threshold (75) to prevent false blocking of new students
                             if conf < 75: 
                                 detections[Id] = detections.get(Id, 0) + 1
                         
                         check_count += 1
                         cv2.rectangle(img, (0, 0), (640, 40), (37, 99, 235), -1)
-                        cv2.putText(img, f"🔍  Scanning Registration... ({check_count}/40)", (10, 26), 
+                        cv2.putText(img, f"Scanning Registration... ({check_count}/40)", (10, 26), 
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
                     
-                    cv2.imshow("Register Student – Press Q to quit early", img)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                    cv2.imshow(WIN_NAME, img)
+                    key = cv2.waitKey(1) & 0xFF
+                    if key in (ord('q'), ord('Q'), 27) or _window_closed(WIN_NAME):
                         cam.release()
                         cv2.destroyAllWindows()
                         return
@@ -125,8 +169,7 @@ def TakeImage(l1, l2, stream, semester,
 
                                 # [CHANGE] Only Warn on screen, Don't speak or Block for presentation
                                 if str(existing_enroll).strip() != str(Enrollment).strip():
-                                    _update_label(message, f"⚠️  Warning: Face looks like {existing_name}", "#D97706")
-                                    # Disabled TTS warning for smoother presentation
+                                    _update_label(message, f"Warning: Face looks like {existing_name}", "#D97706")
                                     time.sleep(1) 
                                     break
                                 else:
@@ -147,6 +190,7 @@ def TakeImage(l1, l2, stream, semester,
 
         _update_label(message, f"📸  Capturing images for {Name}… (0/50)", "#2563EB")
 
+        WIN_NAME = "Register Student - Press Q to quit early"
         last_frame_time = time.time()
         while True:
             ret, img = cam.read()
@@ -157,13 +201,18 @@ def TakeImage(l1, l2, stream, semester,
                 cv2.waitKey(1)
                 continue
 
+            # Skip corrupted/green frames
+            if _is_corrupted(img):
+                cv2.waitKey(1)
+                continue
+
             last_frame_time = time.time()
             gray  = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             faces = detector.detectMultiScale(gray, 1.3, 5)
 
             # [FIX] Ensure only one face is captured at a time to prevent mixing training data
             if len(faces) == 0:
-                cv2.putText(img, "⚠️  FACE NOT DETECTED", (180, 240), 
+                cv2.putText(img, "FACE NOT DETECTED", (180, 240), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
                 _update_label(message, "⚠  Please show your face to start capture.", "#D97706")
             elif len(faces) > 1:
@@ -185,12 +234,13 @@ def TakeImage(l1, l2, stream, semester,
                         os.path.join(path, f"{Name}_{Enrollment}_{sampleNum}.jpg"),
                         face_roi
                     )
-                    _update_label(message, f"📸  Capturing… {sampleNum}/50", "#2563EB")
+                    _update_label(message, f"Capturing... {sampleNum}/50", "#2563EB")
 
             # Progress bar on frame
             cv2.rectangle(img, (0, 460), (int(640*(sampleNum/50)), 480), (37,99,235), -1)
-            cv2.imshow("Register Student – Press Q to quit early", img)
-            if cv2.waitKey(1) & 0xFF in (ord("q"), ord("Q")):
+            cv2.imshow(WIN_NAME, img)
+            key = cv2.waitKey(1) & 0xFF
+            if key in (ord("q"), ord("Q"), 27) or _window_closed(WIN_NAME):
                 break
             if sampleNum >= 50:
                 break

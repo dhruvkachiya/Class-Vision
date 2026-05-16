@@ -1135,48 +1135,79 @@ def build_reports_tab(parent):
         sub = rep_sub_var.get().strip()
         strm = rep_stream_var.get().strip()
         sem = rep_sem_var.get().strip()
+        start = start_date_var.get()
+        end = end_date_var.get()
         
         if not sub:
             notif_r.config(text="⚠  Select a subject first.", fg=DANGER); return
             
         try:
-            # Get path of the internal report file
-            src_path = show_attendance.export_report(sub)
+            notif_r.config(text="⏳  Generating logs report...", fg=ACCENT)
+            # NEW: Gets Date-wise raw logs (5 columns)
+            src_path = show_attendance.export_report(sub, start, end, strm, sem)
             
-            # Suggest a professional filename
-            suggested_name = f"Attendance_Report_{strm}_{sub}_Sem{sem}.csv"
+            suggested_name = f"Attendance_Logs_{strm}_{sub}_Sem{sem}.xlsx"
             
-            # Open Save As Dialog
             filesave = filedialog.asksaveasfilename(
                 initialfile=suggested_name,
-                defaultextension=".csv",
-                filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")],
-                title="Save Attendance Report"
+                defaultextension=".xlsx",
+                filetypes=[("Excel Files", "*.xlsx"), ("All Files", "*.*")],
+                title="Save Date-wise Attendance Logs"
             )
             
             if filesave:
                 import shutil
                 shutil.copy(src_path, filesave)
-                notif_r.config(text=f"✅ Report saved successfully!", fg=ACCENT2)
-                messagebox.showinfo("Export Successful", f"Report saved at:\n{filesave}")
+                notif_r.config(text=f"✅ Date-wise logs exported successfully!", fg=ACCENT2)
+                messagebox.showinfo("Export Successful", f"Date-wise logs saved at:\n{filesave}\n\n(Columns: Enrollment, Name, Date, Time, Status)")
             else:
                 notif_r.config(text="⚠ Export cancelled.", fg=WARN)
                 
         except Exception as e:
             notif_r.config(text=f"Error: {e}", fg=DANGER)
-            messagebox.showerror("Export Error", f"Could not export report: {e}")
+            messagebox.showerror("Export Error", f"Could not export logs: {e}")
 
     b_exp = make_styled_btn(btn_row, "💾  Export Report", export_report, bg="#7C3AED")
     b_exp.pack(side=LEFT, padx=(0, 12))
     add_hover(b_exp, "#7C3AED", "#6D28D9")
 
-    def open_rep_folder():
-        sub = rep_sub_var.get()
-        path = os.path.join(ATTENDANCE_PATH, sub)
-        if os.path.exists(path): os.startfile(path)
-        else: messagebox.showwarning("Not Found", "No folder for this subject.")
+    def download_full_history():
+        sub = rep_sub_var.get().strip()
+        strm = rep_stream_var.get().strip()
+        sem = rep_sem_var.get().strip()
+        
+        if not sub:
+            notif_r.config(text="⚠  Select a subject first.", fg=DANGER); return
+        
+        try:
+            notif_r.config(text="⏳  Fetching summary report...", fg=ACCENT)
+            # NEW: Gets the Summary report (8 columns)
+            src_path = show_attendance.export_full_history(sub)
+            
+            suggested_name = f"Attendance_Summary_{strm}_{sub}_Sem{sem}.xlsx"
+            
+            filesave = filedialog.asksaveasfilename(
+                initialfile=suggested_name,
+                defaultextension=".xlsx",
+                filetypes=[("Excel Files", "*.xlsx"), ("All Files", "*.*")],
+                title="Save Attendance Summary Report"
+            )
+            
+            if filesave:
+                import shutil
+                shutil.copy(src_path, filesave)
+                notif_r.config(text=f"✅ Summary report exported successfully!", fg=ACCENT2)
+                messagebox.showinfo("Export Successful",
+                    f"Summary report saved at:\n{filesave}\n\n"
+                    f"📊 Columns: Enrollment, Name, Stream, Semester, Total, Attended, %, Status")
+            else:
+                notif_r.config(text="⚠ Export cancelled.", fg=WARN)
+                
+        except Exception as e:
+            notif_r.config(text=f"Error: {e}", fg=DANGER)
+            messagebox.showerror("Export Error", f"Could not export summary: {e}")
 
-    b_of = make_styled_btn(btn_row, "📂  Open Subject Folder", open_rep_folder, bg="#64748B")
+    b_of = make_styled_btn(btn_row, "📥  Download Full History", download_full_history, bg="#64748B")
     b_of.pack(side=LEFT)
     add_hover(b_of, "#64748B", "#475569")
 

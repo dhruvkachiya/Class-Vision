@@ -427,7 +427,11 @@ export default function App() {
       <div className="tech-section" id="stack">
         <Reveal>
           <div className="section-label">Technical Architecture</div>
-          <h2 className="section-title">The Power Behind CLASS VISION</h2>
+          <h2 className="section-title">The Power Behind <span style={{
+            background: 'linear-gradient(90deg, #3b82f6, #22d3ee)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}>CLASS VISION</span></h2>
           <p className="section-sub" style={{ margin: '0 auto 60px' }}>
             A carefully selected stack for performance, reliability, and local processing.
           </p>
@@ -485,7 +489,7 @@ export default function App() {
 
       {/* FOOTER */}
       <footer className="footer">
-        <span>© 2026 Auto Attendance AML — All processing is local.</span>
+        <span>© 2026 Class Vision — All processing is local.</span>
         <span style={{ color: '#3b82f6' }}>Made with Python + OpenCV</span>
       </footer>
     </div>

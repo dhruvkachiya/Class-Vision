@@ -220,13 +220,73 @@ def generate_and_show(subject, start_date, end_date, tree_widget, notif_label, s
         _safe_lbl(notif_label, f"Error: {e}", DANGER)
 
 
-def export_report(subject):
-    """Export compiled report CSV. Returns path on success."""
+def export_report(subject, start_date, end_date, stream=None, semester=None):
+    """
+    NEW: Export Date-wise raw logs (5 columns) for a specific range.
+    This is now called by the 'Export Report' button.
+    """
     path_dir = os.path.join(ATTENDANCE_PATH, subject)
-    report   = os.path.join(path_dir, "attendance_report.csv")
-    if os.path.exists(report):
-        return report
-    raise FileNotFoundError(f"No report found for '{subject}'. Generate first.")
+    pattern = os.path.join(path_dir, f"{subject}_*.csv")
+    all_files = glob(pattern)
+    
+    valid_files = []
+    for f in all_files:
+        try:
+            f_name = os.path.basename(f)
+            parts = f_name.replace(f"{subject}_", "").split("_")
+            file_date = parts[0]
+            if start_date <= file_date <= end_date:
+                valid_files.append(f)
+        except: continue
+
+    if not valid_files:
+        raise FileNotFoundError("No session records found in this date range.")
+
+    all_frames = []
+    for f in sorted(valid_files):
+        try:
+            d = pd.read_csv(f, dtype=str).fillna("")
+            if stream and "Stream" in d.columns and not d.empty:
+                if str(d["Stream"].iloc[0]).strip() != str(stream).strip(): continue
+            if semester and semester != "All" and "Semester" in d.columns and not d.empty:
+                if str(d["Semester"].iloc[0]).strip() != str(semester).strip(): continue
+            all_frames.append(d)
+        except: continue
+
+    if not all_frames:
+        raise FileNotFoundError("No matching records for selected filters.")
+
+    combined = pd.concat(all_frames, ignore_index=True)
+    cols = ["Enrollment", "Name", "Date", "Time", "Status"]
+    existing = [c for c in cols if c in combined.columns]
+    df_final = combined[existing]
+
+    out_path = os.path.join(path_dir, "range_logs_export.xlsx")
+    with pd.ExcelWriter(out_path, engine='openpyxl') as writer:
+        df_final.to_excel(writer, index=False, sheet_name='Attendance Logs')
+        ws = writer.sheets['Attendance Logs']
+        for idx, col in enumerate(df_final.columns):
+            max_len = max(df_final[col].astype(str).map(len).max(), len(col)) + 3
+            ws.column_dimensions[chr(65+idx)].width = max_len
+    
+    return out_path
+
+
+def export_full_history(subject):
+    """
+    NEW: Returns the Summary report (8 columns).
+    This is now called by the 'Download Full History' button.
+    """
+    path_dir = os.path.join(ATTENDANCE_PATH, subject)
+    report_xlsx = os.path.join(path_dir, "attendance_report.xlsx")
+    if os.path.exists(report_xlsx):
+        return report_xlsx
+    
+    report_csv = os.path.join(path_dir, "attendance_report.csv")
+    if os.path.exists(report_csv):
+        return report_csv
+        
+    raise FileNotFoundError("No summary report found. Please click 'Generate Range Report' first.")
 
 
 # ── Legacy support (subjectchoose still available if called elsewhere) ────────

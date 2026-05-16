@@ -33,14 +33,54 @@ def _open_camera():
     for src in srcs:
         cap = cv2.VideoCapture(src)
         if cap.isOpened():
-            ret, frame = cap.read()
-            if ret and frame is not None:
-                cap.set(cv2.CAP_PROP_FRAME_WIDTH,  640)
-                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+            # Set MJPEG codec
+            cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH,  640)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+            
+            # Wait for camera to stabilize
+            time.sleep(0.5)
+            
+            good_frames = 0
+            for _ in range(10):
+                ret, frame = cap.read()
+                if ret and frame is not None and not _is_corrupted(frame):
+                    good_frames += 1
+            
+            if good_frames >= 3:
                 print(f"[Camera] Connected: {src}")
                 return cap
         cap.release()
     return None
+
+
+def _is_corrupted(frame):
+    """Detect corrupted/green/striped frames from DroidCam."""
+    if frame is None: return True
+    
+    # 1. Check for green dominance
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    green_mask = cv2.inRange(hsv, (35, 40, 40), (85, 255, 255))
+    green_ratio = cv2.countNonZero(green_mask) / (frame.shape[0] * frame.shape[1])
+    if green_ratio > 0.5: return True
+    
+    # 2. Check for horizontal stripes/noise
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    row_averages = np.mean(gray, axis=1)
+    row_diffs = np.abs(np.diff(row_averages))
+    if np.max(row_diffs) > 80:
+        return True
+        
+    return False
+
+
+def _window_closed(win_name):
+    """Check if OpenCV window was closed via X button."""
+    try:
+        return cv2.getWindowProperty(win_name, cv2.WND_PROP_VISIBLE) < 1
+    except Exception:
+        return True
 
 def _safe(label, text, color="#2563EB"):
     try:
@@ -115,7 +155,9 @@ def subjectChoose(text_to_speech, subject, duration_secs,
             last_frame_time = time.time()
 
             _safe(notif_label,
-                  f"✅  Camera active! Scanning for '{subject}'…", "#059669")
+                  f"Camera active! Scanning for '{subject}'...", "#059669")
+
+            WIN_NAME = "CLASS VISION - Taking Attendance (ESC to stop)"
 
             while True:
                 elapsed  = time.time() - start_time
@@ -124,7 +166,7 @@ def subjectChoose(text_to_speech, subject, duration_secs,
 
                 _safe_pb(progress_bar, progress)
                 _safe_countdown(countdown_label,
-                                f"⏱  Time remaining: {remain}s")
+                                f"Time remaining: {remain}s")
 
                 if elapsed >= duration_secs:
                     break
@@ -136,6 +178,11 @@ def subjectChoose(text_to_speech, subject, duration_secs,
                         break
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
+                    continue
+
+                # Skip corrupted/green frames
+                if _is_corrupted(im):
+                    cv2.waitKey(1)
                     continue
 
                 last_frame_time = time.time()
@@ -217,9 +264,9 @@ def subjectChoose(text_to_speech, subject, duration_secs,
                 cv2.putText(im, overlay, (10, 26),
                             cv_font, 0.62, (245, 197, 24), 2)
 
-                cv2.imshow("CLASS VISION – Taking Attendance (ESC to stop)", im)
+                cv2.imshow(WIN_NAME, im)
                 key = cv2.waitKey(30) & 0xFF
-                if key == 27:
+                if key == 27 or _window_closed(WIN_NAME):
                     break
 
             cam.release()
